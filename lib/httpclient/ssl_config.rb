@@ -69,12 +69,18 @@ class HTTPClient
     # For server side configuration.  Ignore this.
     attr_reader :client_ca # :nodoc:
 
+    # To use filename specification of the CAfile
+    attr_reader :ca_file # :nodoc:
+
+    # To use a path specification to go get the CApath
+    attr_reader :ca_path # :nodoc:
+
     # Creates a SSLConfig.
     def initialize(client)
       return unless SSLEnabled
       @client = client
       @cert_store = X509::Store.new
-      @client_cert = @client_key = @client_ca = nil
+      @client_cert = @client_key = @client_ca = @ca_file = @ca_path = nil
       @verify_mode = SSL::VERIFY_PEER | SSL::VERIFY_FAIL_IF_NO_PEER_CERT
       @verify_depth = nil
       @verify_callback = nil
@@ -237,6 +243,16 @@ class HTTPClient
       change_notify
     end
 
+    def ca_path=(ca_path) # :nodoc:
+      @ca_path = ca_path
+      change_notify
+    end
+
+    def ca_file=(ca_file) # :nodoc:
+      @ca_file = ca_file
+      change_notify
+    end
+
     # interfaces for SSLSocketWrap.
     def set_context(ctx) # :nodoc:
       load_trust_ca unless @cacerts_loaded
@@ -253,6 +269,8 @@ class HTTPClient
       ctx.timeout = @timeout
       ctx.options = @options
       ctx.ciphers = @ciphers
+      ctx.ca_file = @ca_file
+      ctx.ca_path = @ca_path
     end
 
     # post connection check proc for ruby < 1.8.5.
